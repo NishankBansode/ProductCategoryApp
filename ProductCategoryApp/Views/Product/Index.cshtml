@@ -1,0 +1,72 @@
+﻿@model IEnumerable<Product>
+
+<h2>Product List</h2>
+<div class="text-right mb-4">
+    <a asp-action="Create" class="btn btn-primary">Add New Product</a>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Product ID</th>
+            <th>Product Name</th>
+            <th>Category ID</th>
+            <th>Category Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int i = 1 + ((int)ViewData["CurrentPage"] - 1) * 10;
+        }
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@i</td>
+                <td>@item.ProductId</td>
+                <td>@item.ProductName</td>
+                <td>@item.CategoryId</td>
+                <td>@item.Category?.CategoryName</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-warning btn-sm">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@item.ProductId" method="post" onsubmit="return confirm('Are you sure you want to delete this product?');" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            i++;
+        }
+    </tbody>
+</table>
+
+<nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+        @if ((int)ViewData["CurrentPage"] > 1)
+        {
+            <li class="page-item">
+                <a class="page-link" asp-action="Index" asp-route-page="@( (int)ViewData["CurrentPage"] - 1 )" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        }
+
+        @for (int pageNumber = 1; pageNumber <= (int)ViewData["TotalPages"]; pageNumber++)
+        {
+            <li class="page-item @(pageNumber == (int)ViewData["CurrentPage"] ? "active" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@pageNumber">@pageNumber</a>
+            </li>
+        }
+
+        @if ((int)ViewData["CurrentPage"] < (int)ViewData["TotalPages"])
+        {
+            <li class="page-item">
+                <a class="page-link" asp-action="Index" asp-route-page="@( (int)ViewData["CurrentPage"] + 1 )" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        }
+    </ul>
+</nav>
+
+
+
