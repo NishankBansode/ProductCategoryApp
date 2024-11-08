@@ -140,3 +140,4 @@ C:\Users\Win\source\repos\ProductCategoryApp\ProductCategoryApp\obj\Debug\net8.0
 C:\Users\Win\source\repos\ProductCategoryApp\ProductCategoryApp\obj\Debug\net8.0\ProductCategoryApp.pdb
 C:\Users\Win\source\repos\ProductCategoryApp\ProductCategoryApp\obj\Debug\net8.0\ProductCategoryApp.genruntimeconfig.cache
 C:\Users\Win\source\repos\ProductCategoryApp\ProductCategoryApp\obj\Debug\net8.0\ref\ProductCategoryApp.dll
+C:\Users\Win\source\repos\ProductCategoryApp\ProductCategoryApp\obj\Debug\net8.0\ProductCategoryApp.sourcelink.json

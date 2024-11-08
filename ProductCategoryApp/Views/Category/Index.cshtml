@@ -18,7 +18,7 @@
     </thead>
     <tbody>
         @{
-            int i = 1; 
+            int i = 1+ ((int)ViewData["CurrentPage"] - 1) * 10 ; 
         }
         @foreach (var item in Model)
         {
@@ -34,10 +34,38 @@
                     </form>
                 </td>
             </tr>
-            i+
+            i++;
         }
     </tbody>
 </table>
+<nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+        @if ((int)ViewData["CurrentPage"] > 1)
+        {
+            <li class="page-item">
+                <a class="page-link" asp-action="Index" asp-route-page="@( (int)ViewData["CurrentPage"] - 1 )" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        }
+
+        @for (int pageNumber = 1; pageNumber <= (int)ViewData["TotalPages"]; pageNumber++)
+        {
+            <li class="page-item @(pageNumber == (int)ViewData["CurrentPage"] ? "active" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@pageNumber">@pageNumber</a>
+            </li>
+        }
+
+        @if ((int)ViewData["CurrentPage"] < (int)ViewData["TotalPages"])
+        {
+            <li class="page-item">
+                <a class="page-link" asp-action="Index" asp-route-page="@( (int)ViewData["CurrentPage"] + 1 )" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        }
+    </ul>
+</nav>
 <script>
    
     function confirmDelete() {

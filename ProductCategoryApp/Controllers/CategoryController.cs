@@ -2,44 +2,55 @@
 using Microsoft.EntityFrameworkCore;
 using ProductCategoryApp.Data;
 using ProductCategoryApp.Models;
+using ProductCategoryApp.Services;
 
 namespace ProductCategoryApp.Controllers
 {
     public class CategoryController : Controller
     {
-        private readonly ApplicationDbContext db;
-        public CategoryController(ApplicationDbContext _db) 
+        private readonly ICategoryService _categoryService;
+        public CategoryController(ICategoryService categoryService)
         {
-            db = _db;
+            _categoryService = categoryService;
         }
-        public IActionResult Index()
+        
+        
+          public async Task<IActionResult> Index(int page=1)
         {
-            var categories = db.Categories.ToList();
+            int pageSize = 10;
+
+            var categories = await _categoryService.GetPaginatedCategoriesAsync(page,pageSize);
+            int totalCatogories = await _categoryService.GetTotalCategoriesCountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalCatogories / pageSize);
+
+
+           
+            ViewData["TotalPages"] = totalPages;
+            ViewData["CurrentPage"] = page;
             return View(categories);
         }
-        public ActionResult Create() 
+        public ActionResult Create()
         {
             return View();
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Category category) 
+        public async Task<IActionResult> Create(Category category)
         {
-          
-                db.Categories.Add(category);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-          
-            
+
+            await _categoryService.AddCategoryAsync(category);
+            return RedirectToAction("Index");
+
+
         }
-        public ActionResult Edit(int? id)
+        public async Task<ActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return BadRequest();
             }
 
-            var category = db.Categories.Find(id);
+            var category = await _categoryService.GetCategoryByIdAsync(id.Value);
             if (category == null)
             {
                 return NotFound();
@@ -48,26 +59,24 @@ namespace ProductCategoryApp.Controllers
             return View(category);
         }
 
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Category category)
+        public async Task<ActionResult> Edit(Category category)
         {
-           
-                db.Entry(category).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
-          
+
+           await _categoryService.UpdateCategoryAsync(category);
+            return RedirectToAction("Index");
+
         }
-        public IActionResult Delete(int? id)
+        public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var category = db.Categories
-                .FirstOrDefault(c => c.CategoryId == id);
+            var category = await _categoryService.GetCategoryByIdAsync(id.Value);
 
             if (category == null)
             {
@@ -79,16 +88,10 @@ namespace ProductCategoryApp.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var category = db.Categories.Find(id);
-            if (category == null)
-            {
-                return NotFound();
-            }
-            db.Categories.Remove(category);
-            
-            db.SaveChanges();
+            var category = await _categoryService.GetCategoryByIdAsync(id);
+            await _categoryService.DeleteCategoryAsync(id);
 
             return RedirectToAction("Index");
         }

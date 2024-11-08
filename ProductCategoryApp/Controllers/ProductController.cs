@@ -3,27 +3,25 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProductCategoryApp.Data;
 using ProductCategoryApp.Models;
+using ProductCategoryApp.Services;
+
 
 namespace ProductCategoryApp.Controllers
 {
     public class ProductController : Controller
     {
-        private readonly ApplicationDbContext db;
-        public ProductController(ApplicationDbContext _db)
+        private readonly IProductService _productService;
+        public ProductController(IProductService productService) 
         {
-            db = _db;
+            _productService = productService;
         }
 
         public async Task<IActionResult> Index(int page = 1)
         {
             int pageSize = 10; // Number of items per page
-            var products = db.Products
-                                   .Include(p => p.Category)
-                                   .Skip((page - 1) * pageSize)
-                                   .Take(pageSize)
-                                   .ToList();
+            var products = await _productService.GetPaginatedProductAsync(page, pageSize);
 
-            int totalProducts = await db.Products.CountAsync();
+            int totalProducts = await _productService.GetTotalProductCountAsync();
             int totalPages = (int)Math.Ceiling((double)totalProducts / pageSize);
 
             ViewData["TotalPages"] = totalPages;
@@ -33,24 +31,23 @@ namespace ProductCategoryApp.Controllers
         }
 
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["Categories"] = new SelectList(db.Categories, "CategoryId", "CategoryName");
+            ViewData["Categories"] = new SelectList(await _productService.GetCategoriesAsync(), "CategoryId", "CategoryName");
             return View();
         }
 
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product)
         {
             if (!string.IsNullOrEmpty(product.ProductName) && product.CategoryId != 0)
             {
-                db.Add(product);
-                await db.SaveChangesAsync();
+                await _productService.AddProductAsync(product);
                 return RedirectToAction("Index");
             }
-            ViewData["Categories"] = new SelectList(db.Categories, "CategoryId", "CategoryName", product.CategoryId);
+            ViewData["Categories"] = new SelectList(await _productService.GetCategoriesAsync(), "CategoryId", "CategoryName", product.CategoryId);
             return View(product);
         }
         [HttpGet]
@@ -58,10 +55,10 @@ namespace ProductCategoryApp.Controllers
         {
             if (id == null) return NotFound();
 
-            var product = await db.Products.FindAsync(id);
+            var product = await _productService.GetProductByIdAsync(id.Value);
             if (product == null) return NotFound();
 
-            ViewBag.Categories = new SelectList(db.Categories, "CategoryId", "CategoryName", product.CategoryId);
+            ViewBag.Categories = new SelectList(await _productService.GetCategoriesAsync(), "CategoryId", "CategoryName", product.CategoryId);
             return View(product);
         }
 
@@ -73,18 +70,17 @@ namespace ProductCategoryApp.Controllers
 
             if (!string.IsNullOrEmpty(product.ProductName) && product.CategoryId != 0)
             {
-                db.Update(product);
-                await db.SaveChangesAsync();
+               await _productService.UpdateProductAsync(product);
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Categories = new SelectList(db.Categories, "CategoryId", "CategoryName", product.CategoryId);
+            ViewBag.Categories = new SelectList(await _productService.GetCategoriesAsync(), "CategoryId", "CategoryName", product.CategoryId);
             return View(product);
         }
-        
+
         public async Task<IActionResult> Delete(int id)
         {
-            var product = await db.Products.Include(p => p.Category).FirstOrDefaultAsync(m => m.ProductId == id);
+            var product = await _productService.GetProductByIdAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -93,14 +89,12 @@ namespace ProductCategoryApp.Controllers
             return View(product);
         }
 
-       
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await db.Products.FindAsync(id);
-            db.Products.Remove(product);
-            await db.SaveChangesAsync();
+           await _productService.DeleteProductAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
